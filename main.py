@@ -18,6 +18,30 @@ def get_backend_ips(domain):
         print(f"❌ Failed to resolve {domain}")
         return []
 
+def get_backend_ips_ns(domain):
+    try:
+        # Run nslookup command
+        result = subprocess.run(
+            ["nslookup", domain],
+            capture_output=True,
+            text=True,
+            check=True
+        )
+
+        # Extract IP addresses from output
+        ips = set()
+        for line in result.stdout.split("\n"):
+            if "Address:" in line:
+                parts = line.split()
+                if len(parts) > 1 and parts[1] != domain:  # Ignore domain self-mapping
+                    ips.add(parts[1])
+
+        return list(ips)
+
+    except subprocess.CalledProcessError:
+        print(f"❌ Failed to resolve {domain}")
+        return []
+
 # Function to ping an IP address
 def ping(ip):
     param = "-n" if platform.system().lower() == "windows" else "-c"
