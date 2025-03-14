@@ -12,13 +12,7 @@ TEST_URL = f"http://{DOMAIN}"  # Change to "https://" if needed
 
 values = "apple, banana, cherry"  # Example string with comma separation
 
-# # Normalize spaces and commas
-# values_list = [v.strip() for v in values.split(",")]
-#
-# # Format for SQL query
-# sql_query = f"SELECT * FROM table WHERE name IN ({', '.join(f"'{v}'" for v in values_list)})"
 
-print(sql_query)
 
 
 # Resolve all backend IPs for the domain
