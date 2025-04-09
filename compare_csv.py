@@ -1,9 +1,23 @@
 import pandas as pd
 
-def compare_csv_files(file1_path, file2_path, output_path):
-    # Read the CSV files and set the first column as index
-    df1 = pd.read_csv(file1_path, index_col=0)
-    df2 = pd.read_csv(file2_path, index_col=0)
+def compare_csv_files(file1_path, file2_path, output_path, primary_col=None):
+    # Read the CSV files
+    df1 = pd.read_csv(file1_path)
+    df2 = pd.read_csv(file2_path)
+    
+    # Set the primary column as index if provided, otherwise use the first column
+    if primary_col:
+        if primary_col not in df1.columns or primary_col not in df2.columns:
+            raise ValueError(f"Primary column '{primary_col}' not found in both CSV files")
+        df1 = df1.set_index(primary_col)
+        df2 = df2.set_index(primary_col)
+    else:
+        df1 = df1.set_index(df1.columns[0])
+        df2 = df2.set_index(df2.columns[0])
+    
+    # Remove rows with null values in the index
+    df1 = df1[df1.index.notnull()]
+    df2 = df2[df2.index.notnull()]
     
     # Find differences between the two dataframes
     # First, ensure both dataframes have the same columns (excluding the index)
@@ -50,6 +64,7 @@ if __name__ == "__main__":
     file1_path = "old_file.csv"
     file2_path = "new_file.csv"
     output_path = "differences.csv"
+    primary_col = "ID"  # Replace with your primary column name
     
-    differences = compare_csv_files(file1_path, file2_path, output_path)
+    differences = compare_csv_files(file1_path, file2_path, output_path, primary_col)
     print(f"Differences have been saved to {output_path}")
