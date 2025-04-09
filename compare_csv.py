@@ -2,6 +2,10 @@ import pandas as pd
 
 def compare_csv_files(file1_path, file2_path, output_path, primary_col=None):
     try:
+        # Get base filenames without path
+        file1_name = file1_path.split('/')[-1]
+        file2_name = file2_path.split('/')[-1]
+        
         # Read the CSV files
         df1 = pd.read_csv(file1_path)
         df2 = pd.read_csv(file2_path)
@@ -36,7 +40,7 @@ def compare_csv_files(file1_path, file2_path, output_path, primary_col=None):
         }
         
         try:
-            # Find added and removed rows (make descriptions clearer)
+            # Find added and removed rows with source file info
             changes['added'] = df2[~df2.index.isin(df1.index)].copy()  
             changes['removed'] = df1[~df1.index.isin(df2.index)].copy()  
             
@@ -47,18 +51,22 @@ def compare_csv_files(file1_path, file2_path, output_path, primary_col=None):
                     if not df1.loc[idx].equals(df2.loc[idx]):
                         row1 = df1.loc[idx].to_frame().T.copy()
                         row2 = df2.loc[idx].to_frame().T.copy()
-                        row1.loc[:, 'change_type'] = 'removed_from_file1'  # Clarify source file
-                        row2.loc[:, 'change_type'] = 'added_to_file2'      # Clarify source file
+                        row1.loc[:, 'change_type'] = f'removed_from_{file1_name}'
+                        row2.loc[:, 'change_type'] = f'added_to_{file2_name}'
+                        row1.loc[:, 'source_file'] = file1_name
+                        row2.loc[:, 'source_file'] = file2_name
                         changes['modified'] = pd.concat([changes['modified'], row1, row2])
                 except (AttributeError, TypeError) as e:
                     print(f"Warning: Skipping comparison for index {idx} due to invalid data")
                     continue
             
-            # Add change_type column safely using .loc with clearer descriptions
+            # Add change_type and source_file columns safely using .loc
             if not changes['added'].empty:
-                changes['added'].loc[:, 'change_type'] = 'new_in_file2'    # Added in second file
+                changes['added'].loc[:, 'change_type'] = f'new_in_{file2_name}'
+                changes['added'].loc[:, 'source_file'] = file2_name
             if not changes['removed'].empty:
-                changes['removed'].loc[:, 'change_type'] = 'only_in_file1' # Only exists in first file
+                changes['removed'].loc[:, 'change_type'] = f'only_in_{file1_name}'
+                changes['removed'].loc[:, 'source_file'] = file1_name
             
             # Combine all changes into one dataframe
             all_changes = pd.concat([
