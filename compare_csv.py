@@ -36,9 +36,9 @@ def compare_csv_files(file1_path, file2_path, output_path, primary_col=None):
         }
         
         try:
-            # Find added and removed rows
-            changes['added'] = df2[~df2.index.isin(df1.index)].copy()
-            changes['removed'] = df1[~df1.index.isin(df2.index)].copy()
+            # Find added and removed rows (make descriptions clearer)
+            changes['added'] = df2[~df2.index.isin(df1.index)].copy()  
+            changes['removed'] = df1[~df1.index.isin(df2.index)].copy()  
             
             # Find modified rows safely
             common_indices = df1.index.intersection(df2.index)
@@ -47,18 +47,18 @@ def compare_csv_files(file1_path, file2_path, output_path, primary_col=None):
                     if not df1.loc[idx].equals(df2.loc[idx]):
                         row1 = df1.loc[idx].to_frame().T.copy()
                         row2 = df2.loc[idx].to_frame().T.copy()
-                        row1.loc[:, 'change_type'] = 'old_value'
-                        row2.loc[:, 'change_type'] = 'new_value'
+                        row1.loc[:, 'change_type'] = 'removed_from_file1'  # Clarify source file
+                        row2.loc[:, 'change_type'] = 'added_to_file2'      # Clarify source file
                         changes['modified'] = pd.concat([changes['modified'], row1, row2])
                 except (AttributeError, TypeError) as e:
                     print(f"Warning: Skipping comparison for index {idx} due to invalid data")
                     continue
             
-            # Add change_type column safely using .loc
+            # Add change_type column safely using .loc with clearer descriptions
             if not changes['added'].empty:
-                changes['added'].loc[:, 'change_type'] = 'added'
+                changes['added'].loc[:, 'change_type'] = 'new_in_file2'    # Added in second file
             if not changes['removed'].empty:
-                changes['removed'].loc[:, 'change_type'] = 'removed'
+                changes['removed'].loc[:, 'change_type'] = 'only_in_file1' # Only exists in first file
             
             # Combine all changes into one dataframe
             all_changes = pd.concat([
