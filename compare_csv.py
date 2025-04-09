@@ -37,28 +37,28 @@ def compare_csv_files(file1_path, file2_path, output_path, primary_col=None):
         
         try:
             # Find added and removed rows
-            changes['added'] = df2[~df2.index.isin(df1.index)]
-            changes['removed'] = df1[~df1.index.isin(df2.index)]
+            changes['added'] = df2[~df2.index.isin(df1.index)].copy()
+            changes['removed'] = df1[~df1.index.isin(df2.index)].copy()
             
             # Find modified rows safely
             common_indices = df1.index.intersection(df2.index)
             for idx in common_indices:
                 try:
                     if not df1.loc[idx].equals(df2.loc[idx]):
-                        row1 = df1.loc[idx].to_frame().T
-                        row2 = df2.loc[idx].to_frame().T
-                        row1['change_type'] = 'old_value'
-                        row2['change_type'] = 'new_value'
+                        row1 = df1.loc[idx].to_frame().T.copy()
+                        row2 = df2.loc[idx].to_frame().T.copy()
+                        row1.loc[:, 'change_type'] = 'old_value'
+                        row2.loc[:, 'change_type'] = 'new_value'
                         changes['modified'] = pd.concat([changes['modified'], row1, row2])
                 except (AttributeError, TypeError) as e:
                     print(f"Warning: Skipping comparison for index {idx} due to invalid data")
                     continue
             
-            # Add change_type column safely
+            # Add change_type column safely using .loc
             if not changes['added'].empty:
-                changes['added']['change_type'] = 'added'
+                changes['added'].loc[:, 'change_type'] = 'added'
             if not changes['removed'].empty:
-                changes['removed']['change_type'] = 'removed'
+                changes['removed'].loc[:, 'change_type'] = 'removed'
             
             # Combine all changes into one dataframe
             all_changes = pd.concat([
