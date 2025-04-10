@@ -26,4 +26,3 @@ else
     echo "Node.js installation failed."
     exit 2
 fi
-https://nodejs.org/dist/v22.14.0/node-v22.14.0-linux-x64.tar.xz
